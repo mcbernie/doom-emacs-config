@@ -9,24 +9,20 @@
 (setq user-full-name "Nicolas Brüggemann"
       user-mail-address "nicolas@wilms-brueggemann.de")
 
-;; Doom exposes five (optional) variables for controlling fonts in Doom. Here
-;; are the three important ones:
-;;
-;; + `doom-font'
-;; + `doom-variable-pitch-font'
-;; + `doom-big-font' -- used for `doom-big-font-mode'; use this for
-;;   presentations or streaming.
-;;
-;; They all accept either a font-spec, font string ("Input Mono-12"), or xlfd
-;; font string. You generally only need these two:
-;; (setq doom-font (font-spec :family "monospace" :size 12 :weight 'semi-light)
-;;       doom-variable-pitch-font (font-spec :family "sans" :size 13))
+;; load the Getting Things Done org-mode setup
+(load! +gtd)
 
-;; There are two ways to load a theme. Both assume the theme is installed and
-;; available. You can either set `doom-theme' or manually load a theme with the
-;; `load-theme' function. This is the default:
-(setq doom-theme 'doom-one)
+;; don't show recent files in switch-buffer
+(setq ivy-use-virtual-buffers nil)
 
+;; change to directory with ivy even if name does not match exactly
+(after! ivy
+  (setq ivy-magic-slash-non-match-action 'ivy-magic-slash-non-match-cd-selected))
+
+(setq doom-font (font-spec :family "Mononoki Nerd Font" :size 15)
+      doom-variable-pitch-font (font-spec :family "Mononoki Nerd Font" :size 15))
+
+(setq doom-theme 'doom-palenight)
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
 (setq org-directory "~/org/")
@@ -71,3 +67,42 @@
          (let ((project-name (projectile-project-name)))
            (unless (string= "-" project-name)
              (format (if (buffer-modified-p)  " ◉ %s" "  ●  %s") project-name))))))
+
+;; configure email
+(after! mu4e
+  ;; load package to be able to capture emails for GTD
+  (require 'org-mu4e)
+  ;; do not use rich text emails
+  (remove-hook! 'mu4e-compose-mode-hook #'org-mu4e-compose-org-mode)
+  ;; ensure viewing messages and queries in mu4e workspace
+  (advice-add 'mu4e-view-message-with-message-id :around #'+kandread/view-in-mu4e-workspace)
+  (advice-add 'mu4e-headers-search :around #'+kandread/view-in-mu4e-workspace)
+  ;; instead of displaying the fallback buffer (dashboard) after quitting mu4e, switch to last active buffer in workspace
+  (advice-add '+email|kill-mu4e :around #'+kandread/restore-buffer-after-mu4e)
+  ;; attach files to messages by marking them in dired buffer
+  (require 'gnus-dired)
+  (defalias 'gnus-dired-mail-buffers '+kandread/gnus-dired-mail-buffers)
+  (setq gnus-dired-mail-mode 'mu4e-user-agent)
+  (add-hook! 'dired-mode-hook #'turn-on-gnus-dired-mode)
+  ;; disable line wrapping when viewing headers
+  (add-hook! 'mu4e-headers-mode-hook #'+kandread/turn-off-visual-line-mode)
+  ;; configure mu4e options
+  (setq mu4e-confirm-quit nil ; quit without asking
+        mu4e-attachment-dir "~/Downloads"
+        mu4e-maildir (expand-file-name "~/Mail/jpl")
+        mu4e-get-mail-command "mbsync jpl"
+        mu4e-user-mail-address-list '("kandread@jpl.nasa.gov" "konstantinos.m.andreadis@jpl.nasa.gov")
+	    user-mail-address "kandread@jpl.nasa.gov"
+	    user-full-name "Kostas Andreadis")
+  (setq mu4e-bookmarks
+	'(("flag:unread AND NOT flag:trashed" "Unread messages" ?u)
+          ("date:today..now AND maildir:/inbox" "Today's messages" ?t)
+          ("date:7d..now AND maildir:/inbox" "Last 7 days" ?w)))
+  (setq message-send-mail-function 'smtpmail-send-it
+	smtpmail-stream-type 'starttls
+	smtpmail-default-smtp-server "smtp.jpl.nasa.gov"
+	smtpmail-smtp-server "smtp.jpl.nasa.gov"
+	smtpmail-smtp-service 587)
+  ;; add custom actions for messages
+  (add-to-list 'mu4e-view-actions
+	       '("View in browser" . mu4e-action-view-in-browser) t))
