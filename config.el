@@ -3,14 +3,12 @@
 ;; Place your private configuration here! Remember, you do not need to run 'doom
 ;; sync' after modifying this file!
 
-
 ;; Some functionality uses this to identify you, e.g. GPG configuration, email
 ;; clients, file templates and snippets.
 (setq user-full-name "Nicolas Brüggemann"
       user-mail-address "nicolas@wilms-brueggemann.de")
 
 ;; load the Getting Things Done org-mode setup
-(load! +gtd)
 
 ;; don't show recent files in switch-buffer
 (setq ivy-use-virtual-buffers nil)
