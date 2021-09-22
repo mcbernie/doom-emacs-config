@@ -5,9 +5,13 @@
 
 ;; Some functionality uses this to identify you, e.g. GPG configuration, email
 ;; clients, file templates and snippets.
-(setq user-full-name "Nicolas Brüggemann"
+(setq user-full-name "Nicolas Wilms-Brüggemann"
       user-mail-address "nicolas@wilms-brueggemann.de")
 
+(cond ((eq system-type 'darwin)
+       (setq ns-right-alternate-modifier 'none)
+       )
+)
 ;; load the Getting Things Done org-mode setup
 
 ;; don't show recent files in switch-buffer
@@ -45,6 +49,8 @@
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
 
+
+(setq rustic-flycheck-clippy-params "--message-format=json")
 
 (setq display-line-numbers-type 'relative)
 
